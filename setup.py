@@ -10,7 +10,7 @@ setup(name='prometheus-xmpp-alerts',
       author_email="jelmer@jelmer.uk",
       url="https://jelmer.uk/code/prometheus-xmpp-alerts",
       description="Prometheus XMPP Alerts hook",
-      version='0.3.2',
+      version='0.3.2.1',
       license='Apachev2',
       project_urls={
           "Bug Tracker":
@@ -18,6 +18,9 @@ setup(name='prometheus-xmpp-alerts',
           "Repository": "https://www.jelmer.uk/code/prometheus-xmpp-alerts",
           "GitHub": "https://github.com/jelmer/prometheus-xmpp-alerts",
       },
+      data_files = [
+          ("lib/systemd/system", ["prometheus-xmpp-alerts.service"]),
+      ],
       keywords="prometheus xmpp jabber",
       packages=['prometheus_xmpp'],
       scripts=['prometheus-xmpp-alerts'],
