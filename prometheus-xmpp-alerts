@@ -44,7 +44,7 @@ xmpp_message_counter = Counter(
 online_gauge = Gauge(
     'xmpp_online', 'Connected to XMPP server.')
 last_alert_message_succeeded_gauge = Gauge(
-    'last_alert_message_succeeded', 'Lastalert message succeeded.')
+    'last_alert_message_succeeded', 'Last alert message succeeded.')
 
 
 def read_password_from_command(cmd):
@@ -155,14 +155,16 @@ app.connect()
 async def serve_test(request):
     to_jid = request.match_info.get('to_jid', config['to_jid'])
     test_counter.inc()
-    id_ = app.send_message(
+    try:
+        app.send_message(
             mto=to_jid,
             mbody='Test message',
             mtype='chat')
-    try:
+    except slixmpp.xmlstream.xmlstream.NotConnectedError as e:
+        return web.Response(
+            body='Did not send message. Not online: %s' % e)
+    else:
         return web.Response(body='Sent message.')
-    except slixmpp.xmlstream.xmlstream.NotConnectedError:
-        return web.Response(body='Did not send message.  Not online.')
 
 
 async def serve_alert(request):
@@ -178,16 +180,18 @@ async def serve_alert(request):
         else:
             text = '\n'.join(create_message_short(alert))
         try:
-            id_ = app.send_message(
+            app.send_message(
                     mto=to_jid,
                     mbody=text,
                     mtype='chat')
-            return web.Response(body='Sent message')
-            last_alert_message_succeeded_gauge.set(1)
         except slixmpp.xmlstream.xmlstream.NotConnectedError as e:
-            return web.Response(body='Did not send message.  Not online: %s' % e)
             logging.warning('Alert posted but we are not online: %s', e)
             last_alert_message_succeeded_gauge.set(0)
+            return web.Response(
+                body='Did not send message. Not online: %s' % e)
+        else:
+            last_alert_message_succeeded_gauge.set(1)
+            return web.Response(body='Sent message')
     except Exception:
         last_alert_message_succeeded_gauge.set(0)
         raise
