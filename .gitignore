@@ -4,3 +4,4 @@ prometheus_xmpp_alerts.egg-info
 MANIFEST
 build
 dist
+__pycache__
